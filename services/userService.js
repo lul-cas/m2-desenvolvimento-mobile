@@ -26,13 +26,11 @@ export const createOrUpdateUser = async (
 };
 
 export const getProfile = async (token, userId) => {
-  console.log("Fetching data for userId:", userId);
   const response = await api.get(`/profile/data/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
-  console.log(response.data);
   return response.data;
 };
