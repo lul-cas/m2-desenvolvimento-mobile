@@ -5,6 +5,8 @@ import { getAuth } from "firebase/auth";
 import { PrimaryButton } from "../../components/Buttons";
 import { regexPhone, regexUsername } from "../../utils/regex";
 import { ErrorMessage, SuccessMessage } from "../../components/Messages";
+import { formatPhone } from "../../utils/format";
+import { useNavigation } from "@react-navigation/native";
 
 const styles = StyleSheet.create({
   container: {
@@ -34,6 +36,11 @@ const styles = StyleSheet.create({
 
 const NewUserInfoScreen = () => {
   const [phone, setPhone] = useState("");
+  const SetPhone = (text) => {
+    const formattedPhone = formatPhone(text);
+    setPhone(formattedPhone);
+  };
+
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
 
@@ -41,6 +48,8 @@ const NewUserInfoScreen = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const auth = getAuth();
   const uid = auth.currentUser?.uid;
+
+  const navigation = useNavigation();
 
   const saveUserData = async () => {
     setSuccessMessage("");
@@ -66,6 +75,7 @@ const NewUserInfoScreen = () => {
       await createProfile(token, phone, name, username);
       setErrorMessage("");
       Alert.alert("Success", "User information saved successfully.");
+      navigation.navigate("Home");
     } catch (error) {
       setErrorMessage("An error occurred while saving user information.");
     }
@@ -79,7 +89,7 @@ const NewUserInfoScreen = () => {
         style={styles.input}
         keyboardType="phone-pad"
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={SetPhone}
         placeholder="(99) 99999-9999"
       />
 
