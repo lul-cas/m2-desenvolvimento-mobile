@@ -34,7 +34,6 @@ export const getProfile = async (token, userId) => {
       },
     });
 
-    console.log(response.status);
     return response.data;
   } catch (error) {
     return null;
@@ -64,4 +63,27 @@ export const updateProfile = async (
   );
 
   return response.data;
+};
+
+export const uploadProfilePicture = async (token, uri) => {
+  const formData = new FormData();
+  formData.append("file", {
+    uri,
+    name: "profile_picture.jpg",
+    type: "image/jpeg",
+  });
+
+  try {
+    const response = await api.post("/profile/pic/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    throw error;
+  }
 };

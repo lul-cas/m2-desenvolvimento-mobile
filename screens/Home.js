@@ -465,11 +465,16 @@ export default function HomeScreen() {
               }
               style={styles.commentItem}
             >
-              <UserAvatar photoUrl={comment.user?.profile_picture} size={30} />
+              <UserAvatar
+                photoUrl={comment.user?.profile_picture}
+                size={30}
+                redirect={true}
+                redirectUid={comment.user?.id}
+              />
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate("Profile", {
-                    username: comment.user?.username,
+                    userId: comment.user?.id,
                   })
                 }
               >

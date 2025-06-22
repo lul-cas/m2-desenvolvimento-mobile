@@ -2,16 +2,37 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, Image, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { uploadProfilePicture } from "../services/userService";
+import { auth } from "../firebase";
 
 const DEFAULT_AVATAR = "https://www.gravatar.com/avatar/?d=mp&s=200";
 
-const UserAvatar = ({ photoUrl, size = 100, onChange, redirect = false }) => {
+const UserAvatar = ({
+  photoUrl,
+  size = 100,
+  onChange,
+  redirect = false,
+  redirectUid = null,
+}) => {
   const [localUri, setLocalUri] = useState(null);
   const navigation = useNavigation();
 
+  const handleUpload = async (uri) => {
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await uploadProfilePicture(token, uri);
+      onChange?.(uri);
+      Alert.alert("Sucesso", "Foto de perfil atualizada.");
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível atualizar a foto de perfil.");
+    }
+  };
+
   const handlePress = async () => {
     if (redirect) {
-      navigation.navigate("Profile");
+      navigation.navigate("Profile", {
+        userId: redirectUid || null,
+      });
       return;
     }
 
@@ -35,6 +56,7 @@ const UserAvatar = ({ photoUrl, size = 100, onChange, redirect = false }) => {
           if (!result.canceled) {
             const uri = result.assets[0].uri;
             setLocalUri(uri);
+            await handleUpload(uri);
           }
         },
       },
@@ -56,7 +78,7 @@ const UserAvatar = ({ photoUrl, size = 100, onChange, redirect = false }) => {
           if (!result.canceled) {
             const uri = result.assets[0].uri;
             setLocalUri(uri);
-            onChange?.(uri);
+            await handleUpload(uri);
           }
         },
       },

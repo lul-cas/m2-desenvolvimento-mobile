@@ -21,7 +21,7 @@ import {
 } from "../../services/postService";
 import { auth } from "../../firebase";
 import { signOut } from "firebase/auth";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { PrimaryButton, DangerButton } from "../../components/Buttons";
 import UserAvatar from "../../components/userAvatar";
 import { formatPhone } from "../../utils/format";
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ route: { params } = {} }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
@@ -139,7 +139,16 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
 
   const fetchUserData = async () => {
-    const uid = auth.currentUser?.uid;
+    let uid;
+    const userId = params?.userId || null;
+    if (userId) {
+      uid = userId;
+    } else {
+      uid = auth.currentUser?.uid;
+    }
+
+    console.log(uid);
+
     const token = await auth.currentUser?.getIdToken();
     if (!uid || !token) return;
     const data = await getProfile(token, uid);
@@ -278,7 +287,11 @@ const ProfileScreen = () => {
                 marginTop: 5,
               }}
             >
-              <UserAvatar photoUrl={c.user?.profile_picture} size={30} />
+              <UserAvatar
+                photoUrl={c.user?.profile_picture}
+                size={30}
+                redirect={true}
+              />
               <Text style={{ marginLeft: 8 }}>
                 <Text style={{ fontWeight: "bold" }}>
                   {c.user?.username || c.user_id}:
