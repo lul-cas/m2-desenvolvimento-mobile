@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { getProfile } from "../../services/userService";
-import { getAuth, signOut } from "firebase/auth";
 import { auth } from "../../firebase";
-import { DangerButton, PrimaryButton } from "../../components/Buttons";
+import { signOut } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
+import {
+  PrimaryButton,
+  DangerButton,
+  SecondaryButton,
+} from "../../components/Buttons";
 import UserAvatar from "../../components/userAvatar";
+import { formatPhone } from "../../utils/format";
 
 const styles = StyleSheet.create({
   container: {
@@ -47,7 +52,6 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     color: "#888",
-    marginBottom: 20,
   },
 });
 
@@ -125,6 +129,12 @@ const ProfileScreen = () => {
 
       <Text style={styles.name}>{userInfo.name}</Text>
       <Text style={styles.username}>@{userInfo.username}</Text>
+      <Text style={styles.username}>{formatPhone(userInfo.phone_number)}</Text>
+
+      <SecondaryButton
+        text="Editar perfil"
+        action={() => navigation.navigate("EditUserInfo")}
+      />
 
       <PrimaryButton
         text={"Back to Posts"}

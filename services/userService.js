@@ -1,11 +1,6 @@
 import api from "./api";
 
-export const createOrUpdateUser = async (
-  bearerToken,
-  phone,
-  name,
-  username,
-) => {
+export const createProfile = async (bearerToken, phone, name, username) => {
   try {
     const response = await api.post(
       "/profile/create",
@@ -31,6 +26,31 @@ export const getProfile = async (token, userId) => {
       Authorization: `Bearer ${token}`,
     },
   });
+
+  return response.data;
+};
+
+export const updateProfile = async (
+  token,
+  name = null,
+  username = null,
+  phone = null,
+  profilePicture = null,
+) => {
+  const response = await api.put(
+    "/profile/update/",
+    {
+      name,
+      username,
+      phone,
+      profilePicture,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
   return response.data;
 };

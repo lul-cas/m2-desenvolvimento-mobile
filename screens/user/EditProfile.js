@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
-import { createProfile } from "../../services/userService";
+import { updateProfile } from "../../services/userService";
 import { getAuth } from "firebase/auth";
-import { PrimaryButton } from "../../components/Buttons";
+import { PrimaryButton, SecondaryButton } from "../../components/Buttons";
 import { regexPhone, regexUsername } from "../../utils/regex";
 import { ErrorMessage, SuccessMessage } from "../../components/Messages";
+import { useNavigation } from "@react-navigation/native";
 
 const styles = StyleSheet.create({
   container: {
@@ -32,13 +33,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const NewUserInfoScreen = () => {
+const EditUserInfoScreen = () => {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const navigation = useNavigation();
   const auth = getAuth();
   const uid = auth.currentUser?.uid;
 
@@ -54,16 +55,9 @@ const NewUserInfoScreen = () => {
       return;
     }
 
-    if (!regexUsername.test(username)) {
-      setErrorMessage(
-        "Invalid username format. Only letters, numbers, and underscores are allowed.",
-      );
-      return;
-    }
-
     try {
       let token = await auth.currentUser.getIdToken(true);
-      await createProfile(token, phone, name, username);
+      await createOrUpdateUser(token, phone, name);
       setErrorMessage("");
       Alert.alert("Success", "User information saved successfully.");
     } catch (error) {
@@ -73,8 +67,8 @@ const NewUserInfoScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lets finish your register</Text>
-      <Text style={styles.label}>Phone:</Text>
+      <Text style={styles.title}>Lets update your data</Text>
+      <Text style={styles.label}>New Phone:</Text>
       <TextInput
         style={styles.input}
         keyboardType="phone-pad"
@@ -83,7 +77,7 @@ const NewUserInfoScreen = () => {
         placeholder="(99) 99999-9999"
       />
 
-      <Text style={styles.label}>Name:</Text>
+      <Text style={styles.label}>New Name:</Text>
       <TextInput
         style={styles.input}
         value={name}
@@ -91,21 +85,20 @@ const NewUserInfoScreen = () => {
         placeholder="How do you want to be called?"
       />
 
-      <Text style={styles.label}>Username:</Text>
-      <TextInput
-        style={styles.input}
-        value={username}
-        onChangeText={setUsername}
-        placeholder="Your username. Pick a cool one 😉"
-      />
-
       {errorMessage ? <ErrorMessage text={errorMessage} /> : null}
 
       {successMessage ? <SuccessMessage text={successMessage} /> : null}
 
       <PrimaryButton text={"Save"} action={saveUserData} />
+      <SecondaryButton
+        text={"Back to Profile"}
+        action={() => {
+          navigation.navigate("Profile");
+        }}
+        style={{ marginTop: 20 }}
+      />
     </View>
   );
 };
 
-export default NewUserInfoScreen;
+export default EditUserInfoScreen;
