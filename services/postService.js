@@ -69,6 +69,8 @@ export const getPosts = async (token, userId = null) => {
     headers: { Authorization: `Bearer ${token}` },
     params: params,
   });
+
+  response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   return response.data;
 };
 
@@ -134,6 +136,17 @@ export const dislikeComment = async (token, postId, commentId) => {
     });
   } catch (error) {
     console.error("Error disliking comment:", error);
+    throw error;
+  }
+};
+
+export const deletePost = async (token, postId) => {
+  try {
+    await api.delete(`/posts/${postId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error) {
+    console.error("Error deleting post:", error);
     throw error;
   }
 };

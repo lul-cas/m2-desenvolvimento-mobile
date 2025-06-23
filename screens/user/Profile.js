@@ -18,13 +18,16 @@ import {
   getPost,
   likePost,
   commentPost,
+  deletePost,
 } from "../../services/postService";
 import { auth } from "../../firebase";
 import { signOut } from "firebase/auth";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { PrimaryButton, DangerButton } from "../../components/Buttons";
 import UserAvatar from "../../components/userAvatar";
 import { formatPhone } from "../../utils/format";
+import { getReadableLocation } from "../../services/locationService";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 
 const styles = StyleSheet.create({
   container: {
@@ -147,8 +150,6 @@ const ProfileScreen = ({ route: { params } = {} }) => {
       uid = auth.currentUser?.uid;
     }
 
-    console.log(uid);
-
     const token = await auth.currentUser?.getIdToken();
     if (!uid || !token) return;
     const data = await getProfile(token, uid);
@@ -175,7 +176,7 @@ const ProfileScreen = ({ route: { params } = {} }) => {
       const updated = await getPost(token, postId);
       setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
       setSelectedPost(updated);
-      const newUserData = await getProfile(token, auth.currentUser.uid);
+      const newUserData = await getProfile(token, userInfo.user_id);
       setUserInfo(newUserData);
     } catch {
       Alert.alert("Erro", "Erro ao atualizar post.");
@@ -189,6 +190,18 @@ const ProfileScreen = ({ route: { params } = {} }) => {
       await refreshPost(postId);
     } catch {
       Alert.alert("Erro", "Erro ao curtir o post");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedPost) return;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await deletePost(token, selectedPost.id);
+      setModalVisible(false);
+      await fetchUserData();
+    } catch {
+      Alert.alert("Erro", "Erro ao excluir o post");
     }
   };
 
@@ -251,6 +264,12 @@ const ProfileScreen = ({ route: { params } = {} }) => {
       <Text style={styles.username}>@{userInfo.username}</Text>
       <Text style={styles.username}>{formatPhone(userInfo.phone_number)}</Text>
 
+      {posts.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 20, color: "#888" }}>
+          Nenhum post encontrado.
+        </Text>
+      ) : null}
+
       <View style={styles.gallery}>
         <FlatList
           data={posts}
@@ -273,11 +292,32 @@ const ProfileScreen = ({ route: { params } = {} }) => {
             <Image key={index} source={{ uri }} style={styles.modalImage} />
           ))}
           <Text>{selectedPost?.description}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <EvilIcons
+              name="location"
+              size={20}
+              color="#555"
+              style={{ marginRight: 4 }}
+            />
+            <Text style={{ color: "#555", fontSize: 14 }}>
+              {selectedPost?.localization
+                ? getReadableLocation(
+                    selectedPost?.localization.lat,
+                    selectedPost?.localization.lng,
+                  )
+                : "Localização não disponível"}
+            </Text>
+          </View>
           <Text style={{ marginTop: 10, color: "#666" }}>
             {selectedPost?.likes_count} curtidas ·{" "}
             {selectedPost?.comments_count} comentários
           </Text>
-
           {selectedPost?.comments?.map((c) => (
             <View
               key={c.id}
@@ -300,7 +340,6 @@ const ProfileScreen = ({ route: { params } = {} }) => {
               </Text>
             </View>
           ))}
-
           <TextInput
             placeholder="Adicione um comentário..."
             style={styles.commentInput}
@@ -309,17 +348,24 @@ const ProfileScreen = ({ route: { params } = {} }) => {
           />
           <PrimaryButton text="Comentar" action={handleComment} />
 
-          {userInfo.liked_posts?.includes(selectedPost?.id) ? (
-            <DangerButton
-              text="Descurtir"
-              action={() => handleLike(selectedPost.id)}
-            />
-          ) : (
-            <PrimaryButton
-              text="Curtir"
-              action={() => handleLike(selectedPost.id)}
-            />
+          {/* Botão excluir post, só aparece se for dono do post */}
+          {auth.currentUser?.uid === selectedPost?.user_id && (
+            <PrimaryButton text="Excluir post" action={handleDelete} />
           )}
+
+          {/* Botão curtir só aparece se NÃO for dono do post */}
+          {auth.currentUser?.uid !== selectedPost?.user_id &&
+            (userInfo.liked_posts?.includes(selectedPost?.id) ? (
+              <DangerButton
+                text="Descurtir"
+                action={() => handleLike(selectedPost.id)}
+              />
+            ) : (
+              <PrimaryButton
+                text="Curtir"
+                action={() => handleLike(selectedPost.id)}
+              />
+            ))}
 
           <DangerButton
             text="Fechar"

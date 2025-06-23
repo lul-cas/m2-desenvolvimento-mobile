@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import PostAuthor from "../components/PostAuthor";
 import {
   SafeAreaView,
   Text,
@@ -25,10 +26,12 @@ import {
   registerPost,
   uploadPostPicture,
 } from "../services/postService";
+import { getReadableLocation } from "../services/locationService";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import Logo from "../components/Logo";
 import UserAvatar from "../components/userAvatar";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -427,10 +430,33 @@ export default function HomeScreen() {
 
   const renderPost = ({ item }) => (
     <View style={styles.postCard} key={item.id.toString()}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <PostAuthor userId={item.user_id} />
+      </View>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}
+      >
+        <EvilIcons
+          name="location"
+          size={20}
+          color="#555"
+          style={{ marginRight: 4 }}
+        />
+        <Text style={{ color: "#555", fontSize: 14 }}>
+          {item.localization
+            ? getReadableLocation(item.localization.lat, item.localization.lng)
+            : "Localização não disponível"}
+        </Text>
+      </View>
+
       {item.pics?.length > 0 && (
         <Image source={{ uri: item.pics[0] }} style={styles.postImage} />
       )}
+
       <Text style={styles.postDescription}>{item.description}</Text>
+
       <View style={styles.actionsRow}>
         <TouchableOpacity
           onPress={() => handleLike(item.id)}
@@ -454,6 +480,7 @@ export default function HomeScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
       {item.comments?.length > 0 && (
         <View style={{ marginTop: 10 }}>
           {item.comments.slice(0, 2).map((comment, index) => (
@@ -489,7 +516,6 @@ export default function HomeScreen() {
       )}
     </View>
   );
-
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
